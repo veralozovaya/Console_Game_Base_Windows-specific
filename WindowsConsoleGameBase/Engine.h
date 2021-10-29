@@ -10,7 +10,7 @@ public:
 		success = 0,
 		paint_device_not_ready
 	};
-
+	virtual ~Engine() {}
 	ErrorCode run();
 
 protected:
@@ -19,10 +19,10 @@ protected:
 
 	PaintDevice& paint_device() { return m_PaintDevice; }
 
-	virtual bool end() const  { return false; }
-	virtual void on_button_press(const int button) {}
-	virtual void update(const int dt) {}
-	virtual void render(PaintDevice& paintDevice) {}
+	virtual bool end() const = 0;
+	virtual void on_button_press(const int button) = 0;
+	virtual void update(const int dt) = 0;
+	virtual void render(PaintDevice& paintDevice) = 0;
 
 private:
 	void uppdateInput();

@@ -1,8 +1,9 @@
 #include "Size.h"
 
-Size::Size(PointType width, PointType height)
-	: m_Width(width) 
+Size::Size(PointType width, PointType height) 
+	: m_Width(width)
 	, m_Height(height) {
+
 }
 
 Size::PointType Size::width() const {

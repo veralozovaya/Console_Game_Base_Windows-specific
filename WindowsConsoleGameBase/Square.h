@@ -3,7 +3,6 @@
 #include "Size.h"
 
 class Square {
-
 public:
 	Square(const Vector2& position, const Size& size);
 

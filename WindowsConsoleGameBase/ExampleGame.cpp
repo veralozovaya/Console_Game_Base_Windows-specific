@@ -117,11 +117,13 @@ void Enemy::update(const int dt) {
 }
 
 bool Enemy::hit(Vector2 point) {
+	
 	for (const Vector2& enemy : m_Enemys) {
-		if (point.x() == enemy.x() && point.y() == enemy.y()) {
+		if (enemy == point) {
 			return true;
 		}
 	}
+
 	return false;
 }
 

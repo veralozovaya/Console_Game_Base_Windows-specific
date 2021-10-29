@@ -15,7 +15,7 @@ Vector2 Square::top_left() const {
 }
 
 Vector2 Square::bottom_right() const {
-	return Vector2(m_Position.x() + m_Size.width() - 1, m_Position.y() + m_Size.height() - 1);
+	return Vector2(m_Position.x() + m_Size.width(), m_Position.y() + m_Size.height()) + Vector2(-1, -1);
 }
 
 bool Square::collide(const Square& other) const {

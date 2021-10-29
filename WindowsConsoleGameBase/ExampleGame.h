@@ -21,6 +21,7 @@ public:
 
 	Vector2 m_Position;
 	std::vector<Vector2> m_Body;
+
 	int m_CooldownCenter = 0;
 	int m_CooldownSide = 0;
 }; 
@@ -41,7 +42,6 @@ private:
 class ExampleGame : public Engine {
 public:
 	ExampleGame();
-
 private:
 	virtual bool end() const { return !m_Enemy.empty() && m_Enemy.first().y() >= m_Height; }
 	virtual void on_button_press(const int button);
