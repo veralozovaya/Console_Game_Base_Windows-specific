@@ -1,215 +1,317 @@
 #include "ExampleGame.h"
 
-void Bullet::render(PaintDevice& paintDevice) {
-	paintDevice.set_char(m_Position, '|');
-}
+#include <Windows.h>
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <algorithm>
+#include <chrono>
 
-void Bullet::update(const int dt) {
-	m_Lag += dt;
-	const int quant = 50;
-	if (m_Lag <= quant) return;
-	m_Lag -= quant;
-	m_Position.y()--;
-}
+using namespace std;
 
-Gun::Gun() {
-	m_Body = {
-		Vector2(5, 0),
-		Vector2(5, 1),
 
-		Vector2(4, 2),
-		Vector2(4, 3),
-		Vector2(4, 4),
-		Vector2(6, 2),
-		Vector2(6, 3),
-		Vector2(6, 4),
+void Fields::GenField()
+{
+	GenMines();
 
-		Vector2(3, 5),
-		Vector2(7, 5),
-
-		Vector2(2, 6),
-		Vector2(5, 6),
-		Vector2(8, 6),
-
-		Vector2(1, 7),
-		Vector2(5, 7),
-		Vector2(9, 7),
-
-		Vector2(0, 8),
-		Vector2(1, 8),
-		Vector2(2, 8),
-		Vector2(8, 8),
-		Vector2(9, 8),
-		Vector2(10, 8),
-
-		Vector2(3, 9),
-		Vector2(7, 9),
-		Vector2(3, 10),
-		Vector2(7, 10),
-
-		Vector2(4, 11),
-		Vector2(6, 11),
-		Vector2(4, 12),
-		Vector2(5, 12),
-		Vector2(6, 12),
-	};
-}
-
-std::vector<Bullet> Gun::fire() {
-	std::vector<Bullet> bulets;
-	if (m_CooldownCenter == 0)
+	for (int i = 0; i < trows; i++)
 	{
-		bulets.push_back(Bullet());
-		bulets.back().m_Position = Vector2(m_Position.x() + 4, m_Position.y() + 1);
-
-		bulets.push_back(Bullet());
-		bulets.back().m_Position = Vector2(m_Position.x() + 6, m_Position.y() + 1);
-		m_CooldownCenter = 300;
-	}
-
-	if (m_CooldownSide == 0)
-	{
-		bulets.push_back(Bullet());
-		bulets.back().m_Position = Vector2(m_Position.x(), m_Position.y() + 7);
-		bulets.push_back(Bullet());
-		bulets.back().m_Position = Vector2(m_Position.x() + 10, m_Position.y() + 7);
-		m_CooldownSide = 150;
-	}
-
-	return bulets;
-}
-
-void Gun::update(const int dt) {
-	m_CooldownCenter -= dt;
-	m_CooldownSide -= dt;
-	if (m_CooldownCenter < 0) m_CooldownCenter = 0;
-	if (m_CooldownSide < 0) m_CooldownSide = 0;
-
-}
-
-void Gun::render(PaintDevice& paintDevice) {
-	for (const Vector2& point : m_Body) {
-		paintDevice.set_char(Vector2(m_Position.x() + point.x(), m_Position.y() + point.y()), 0x2588);
-	}
-}
-
-void Enemy::render(PaintDevice& paintDevice) {
-	for (const Vector2& point : m_Enemys) {
-		paintDevice.set_char(point, 0x25BC);
-	}
-}
-
-void Enemy::update(const int dt) {
-	m_Lag += dt;
-	const int quant = 800;
-	if (m_Lag <= quant) return;
-	m_Lag -= quant;
-
-	for (Vector2& point : m_Enemys) {
-		point.y()++;
-	}
-
-	for (int i = 0; i < 20; ++i) {
-		if (rand() % 2) {
-			m_Enemys.push_back(Vector2(i, 0));
-		}
-	}
-}
-
-bool Enemy::hit(Vector2 point) {
-	
-	for (const Vector2& enemy : m_Enemys) {
-		if (enemy == point) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-void Enemy::remove(Vector2 point) {
-	for (int i = 0; i < m_Enemys.size(); ++i) {
-		if (point.x() == m_Enemys[i].x() && point.y() == m_Enemys[i].y()) {
-			for (int j = i; j < m_Enemys.size() - 1; ++j) {
-				m_Enemys[j] = m_Enemys[j + 1];
+		for (int j = 0; j < tcols; j++)
+		{
+			if (tField[i][j] != '*')
+			{
+				tField[i][j] = GenNeighbours(i, j) + '0';
 			}
-			m_Enemys.pop_back();
-			return;
 		}
 	}
+
+}
+
+void Fields::GenMines()
+{
+	srand(time(NULL));
+	vector <pair<int, int>> MineCoords;
+
+	for (int i = 0; i < trows; i++)
+	{
+		for (int j = 0; j < tcols; j++)
+		{
+			MineCoords.push_back(make_pair(i, j));
+		}
+	}
+
+	random_shuffle(MineCoords.begin(), MineCoords.end());
+
+	for (int i = 0; i < tmines; i++)
+	{
+		tField[MineCoords[i].first][MineCoords[i].second] = '*';
+	}
+}
+
+int Fields::GenNeighbours(int rows, int cols)
+{
+	int neighbours = 0;
+	for (int OffsetRow = -1; OffsetRow <= 1; OffsetRow++)
+	{
+		for (int OffsetCol = -1; OffsetCol <= 1; OffsetCol++)
+		{
+			int NextRow = rows + OffsetRow;
+			int NextCol = cols + OffsetCol;
+			if (CheckIfInside(NextRow, NextCol) && tField[NextRow][NextCol] == '*')
+			{
+				neighbours++;
+			}
+		}
+	}
+	return neighbours;
+}
+
+bool Fields::CheckIfInside(int row, int col)
+{
+	if (0 <= row && row < trows && 0 <= col && col < tcols)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+void Fields::FieldPrint()
+{
+	for (int i = 0; i < urows; i++)
+	{
+		for (int j = 0; j < ucols; j++)
+		{
+
+			uField[i][j] = 0xFE;
+
+		}
+	}
+
+
+	for (int i = 0; i < urows; i++)
+	{
+		for (int j = 0; j < ucols; j++)
+		{
+			for (int k = 0; k < FlagCoords.size(); k++)
+			{
+				if (i == FlagCoords[k].first && j == FlagCoords[k].second)
+				{
+					uField[i][j] = 0xFD;
+				}
+			}
+
+		}
+
+
+	}
+	uField[user_row][user_col] = 0xB0;
+
+	for (int i = 0; i < urows; i++)
+	{
+		for (int j = 0; j < ucols; j++)
+		{
+			for (int k = 0; k < BoxCoords.size(); k++)
+			{
+				if (i == BoxCoords[k].first && j == BoxCoords[k].second)
+				{
+					uField[i][j] = tField[i][j];
+				}
+			}
+
+		}
+	}
+
+	for (int i = 0; i < urows; i++)
+	{
+		for (int j = 0; j < ucols; j++)
+		{
+			cout << uField[i][j] << "  ";
+			if (j == ucols - 1)
+			{
+				cout << "\n";
+			}
+
+		}
+	}
+}
+
+void Fields::OpenBox()
+{
+	if (count == 0)
+	{
+		GenField();
+		if (tField[user_row][user_col] != '*')
+		{
+			BoxCoords.push_back(make_pair(user_row, user_col));
+			FieldPrint();
+		}
+		else
+		{
+			cout << "You've lost(";
+			EndGame();
+		}
+		count++;
+	}
+	else
+	{
+		if (tField[user_row][user_col] != '*')
+		{
+			BoxCoords.push_back(make_pair(user_row, user_col));
+			FieldPrint();
+		}
+		else
+		{
+			cout << "You lost(";
+			EndGame();
+		}
+	}
+
+}
+
+void Fields::FlagBox()
+{
+	FlagCoords.push_back(make_pair(user_row, user_col));
+
+}
+
+void Fields::UnFlagBox()
+{
+	for (int k = 0; k < FlagCoords.size(); k++)
+	{
+		if (user_row == FlagCoords[k].first && user_col == FlagCoords[k].second)
+		{
+			FlagCoords.erase(FlagCoords.begin() + k);
+		}
+
+	}
+}
+
+bool Fields::EndGame()
+{
+	return 0;
 }
 
 ExampleGame::ExampleGame() {
-	paint_device().resize(Size(m_Width, m_Height));
+
+
+	Fields game;
+	game.FieldPrint();
+
+
+	track_key(VK_SPACE); //открыть
 	track_key(VK_LEFT);
 	track_key(VK_RIGHT);
+	track_key(VK_UP);
+	track_key(VK_DOWN);
+	track_key(0x46); //флаг
+	track_key(0x44); //снять флаг
+	GameLoop();
+}
 
-	m_Gun.m_Position = Vector2(m_Width / 2 - 2, m_Height - 14);
+void ExampleGame::GameLoop()
+{
+	while (!EndGame())
+	{
+		uppdateInput();
+	}
 }
 
 void ExampleGame::on_button_press(const int button) {
+
 	switch (button)
 	{
 	case VK_LEFT:
 	{
-		m_Gun.m_Position.x()--;
-		if (m_Gun.m_Position.x() < 0) m_Gun.m_Position.x() = 0;
+		system("cls");
+		user_col--;
+		FieldPrint();
 		break;
 	}
 
 	case VK_RIGHT:
 	{
-		m_Gun.m_Position.x()++;
-		if (m_Gun.m_Position.x() > m_Width - 11) m_Gun.m_Position.x() = m_Width - 11;
+		system("cls");
+		user_col++;
+		FieldPrint();
+		break;
+
+	}
+	case VK_UP:
+	{
+		system("cls");
+		user_row--;
+		FieldPrint();
+		break;
+
+	}
+
+	case VK_DOWN:
+	{
+		system("cls");
+		user_row++;
+		FieldPrint();
+		break;
+
+	}
+	case VK_SPACE:
+	{
+		system("cls");
+		OpenBox();
 		break;
 	}
 
+	case 0x46:
+	{
+		system("cls");
+		FlagBox();
+		FieldPrint();
+		break;
+	}
+
+	case 0x44:
+	{
+		system("cls");
+		UnFlagBox();
+		FieldPrint();
+		break;
+	}
 	default:
 		break;
 	}
+	if (BoxCoords.size() == 119)
+	{
+		cout << "You won!)" << endl;
+		EndGame();
+	}
 }
 
-void ExampleGame::update(const int dt) {
-	m_Enemy.update(dt);
+void ExampleGame::uppdateInput() {
+	for (const int& key : m_TrackedKeys) {
+		const SHORT keyState = GetKeyState(key);
+		const bool isDown = keyState & 0x8000;
 
-	for (int i = 0; i < m_Bullets.size(); i++) {
-		m_Bullets[i].update(dt);
-	}
-	
-	for (int i = 0; i < m_Bullets.size(); i++) {
-		if (m_Bullets[i].m_Position.y() < 0)
-		{
-			for (int j = i; j < m_Bullets.size() - 1; j++) {
-				m_Bullets[j] = m_Bullets[j + 1];
-			}
-			m_Bullets.pop_back();
+		const std::set<int>::const_iterator keyItr = m_PressedKeys.find(key);
+		if (isDown && keyItr == m_PressedKeys.end()) {
+			m_PressedKeys.insert(key);
+			on_button_press(key);
+		}
+		else if (!isDown && keyItr != m_PressedKeys.end()) {
+			m_PressedKeys.erase(keyItr);
 		}
 	}
-
-	for (int i = 0; i < m_Bullets.size(); i++) {
-		if (m_Enemy.hit(m_Bullets[i].m_Position)) {
-			m_Enemy.remove(m_Bullets[i].m_Position);
-
-			for (int j = i; j < m_Bullets.size() - 1; ++j) {
-				m_Bullets[j] = m_Bullets[j + 1];
-			}
-			m_Bullets.pop_back();
-		}
-	}
-
-	m_Gun.update(dt);
-
-	std::vector<Bullet> newBullets = m_Gun.fire();
-	m_Bullets.insert(m_Bullets.end(), newBullets.begin(), newBullets.end());
 }
 
-void ExampleGame::render(PaintDevice& paintDevice) {
-	for (Bullet& bullet : m_Bullets) {
-		bullet.render(paintDevice);
+void ExampleGame::track_key(const int key) {
+	m_TrackedKeys.insert(key);
+}
+
+void ExampleGame::untrack_key(const int key) {
+	const std::set<int>::const_iterator keyItr = m_TrackedKeys.find(key);
+	if (keyItr != m_TrackedKeys.end())
+	{
+		m_TrackedKeys.erase(keyItr);
 	}
-
-	m_Enemy.render(paintDevice);
-
-	m_Gun.render(paintDevice);
-
 }

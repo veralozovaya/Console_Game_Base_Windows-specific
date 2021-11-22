@@ -1,56 +1,54 @@
 #pragma once
 
-#include "Engine.h"
+#include <iostream>
+#include <set>
+#include <iostream>
 #include <vector>
+#include <ctime>
+#include <algorithm>
+#include <Windows.h>
 
-class Bullet {
+using namespace std;
+
+class Fields
+{
 public:
-	void render(PaintDevice& paintDevice);
-	void update(const int dt);
+	char tField[12][12] = {};
+	int trows = 12, tcols = 12, tmines = 25;
+	char uField[12][12] = {};
+	int urows = 12, ucols = 12;
+	int user_row = 0;
+	int user_col = 0;
+	int count = 0;
+	vector <pair<int, int>> FlagCoords;
+	vector <pair<int, int>> BoxCoords;
 
-	Vector2 m_Position;
-	int m_Lag = 0;
+
+	void GenField();
+	void GenMines();
+	int GenNeighbours(int rows, int cols);
+	bool CheckIfInside(int row, int col);
+	void FlagBox();
+	void UnFlagBox();
+	void FieldPrint();
+	void OpenBox();
+	bool EndGame();
+
 };
 
-class Gun {
-public:
-	Gun();
-	std::vector<Bullet> fire();
-	void render(PaintDevice& paintDevice);
-	void update(const int dt);
 
-	Vector2 m_Position;
-	std::vector<Vector2> m_Body;
-
-	int m_CooldownCenter = 0;
-	int m_CooldownSide = 0;
-}; 
-
-class Enemy {
-public:
-	void render(PaintDevice& paintDevice);
-	void update(const int dt);
-	int m_Lag = 0;
-	bool hit(Vector2 point);
-	void remove(Vector2 point);
-	Vector2 first() const { return m_Enemys.front(); }
-	bool empty() const { return m_Enemys.empty(); }
-private:
-	std::vector<Vector2> m_Enemys;
-};
-
-class ExampleGame : public Engine {
+class ExampleGame : public Fields
+{
 public:
 	ExampleGame();
-private:
-	virtual bool end() const { return !m_Enemy.empty() && m_Enemy.first().y() >= m_Height; }
-	virtual void on_button_press(const int button);
-	virtual void update(const int dt);
-	virtual void render(PaintDevice& paintDevice);
+	void GameLoop();
 
-	const size_t m_Width = 20;
-	const size_t m_Height = 40;
-	Gun m_Gun;
-	std::vector<Bullet> m_Bullets;
-	Enemy m_Enemy;
+protected:
+	void track_key(const int key);
+	void untrack_key(const int key);
+private:
+	virtual void on_button_press(const int button);
+	void uppdateInput();
+	set<int> m_PressedKeys;
+	set<int> m_TrackedKeys;
 };
